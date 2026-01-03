@@ -108,18 +108,12 @@ function deleteUserData() {
     return;
   }
 
-  const safeKey = safeEmail.replace(/\./g, ","); // DB 키 안전하게 변환
   const userRef = db.ref("users/" + safeKey);
-  const ordersRef = db.ref("orders/" + safeKey);
-
   userRef.remove()
-    .then(() => console.log("users 삭제 완료"))
-    .catch(err => console.error("users 삭제 실패:", err));
-
-  ordersRef.remove()
-    .then(() => console.log("orders 삭제 완료"))
-    .catch(err => console.error("orders 삭제 실패:", err));
+    .then(() => console.log("users 삭제 완료dddd4"))
+    .catch(err => console.error("users 삭제 실패:dddd4", err));
 }
+
   </script>
 </body>
 </html>
