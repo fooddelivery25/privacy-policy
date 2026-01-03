@@ -22,7 +22,7 @@
 <body>
   <div class="container">
     <h1>배달 정석 앱 계정 삭제</h1>
-    <p>계정을6 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다.<br>일부 정보는 법적 사유로 90일간 보관될 수 있습니다.</p>
+    <p>계정을7 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다.<br>일부 정보는 법적 사유로 90일간 보관될 수 있습니다.</p>
 
     <!-- 로그인 폼 -->
     <input type="email" id="email" placeholder="이메일">
@@ -45,8 +45,6 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.database();
-
 
     const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
@@ -101,7 +99,7 @@ try {
 
   let email2 = user.email; // user.email 값 가져오기
   let safeEmail = email2.replace(/@/g, "_at_").replace(/\./g, "_dot_");
-  //alert("이메일 주소."+safeEmail);
+  alert("사용자 정보가 올바르지 않습니다. 다시 로그인해 주세요."+safeEmail);
   //return;
   //const safeEmail = windows.safeEmailFromApp;
   if (!safeEmail) {
@@ -154,7 +152,7 @@ function deleteUserData(safeEmail) {
     console.error("safeEmail이 없습니다.");
     return;
   }
-  
+
   //const safeKey = safeEmail.replace(/\./g, ","); // Firebase key 안전 처리
   const userRef = db.ref("users/" + safeEmail);
   userRef.remove()
