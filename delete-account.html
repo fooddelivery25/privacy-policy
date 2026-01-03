@@ -22,7 +22,7 @@
 <body>
   <div class="container">
     <h1>배달 정석 앱 계정 삭제</h1>
-    <p>계정을1 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다.<br>일부 정보는 법적 사유로 90일간 보관될 수 있습니다.</p>
+    <p>계정을2 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다.<br>일부 정보는 법적 사유로 90일간 보관될 수 있습니다.</p>
 
     <!-- 로그인 폼 -->
     <input type="email" id="email" placeholder="이메일">
@@ -79,26 +79,45 @@ deleteBtn.addEventListener("click", async () => {
   if (!rePassword) { alert("비밀번호를 입력해야 삭제할 수 있습니다."); return; }
 
 try {
-  await user.reauthenticateWithCredential(credential);
-  await user.delete();
-  await auth.signOut();
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
 
-  // DB 삭제는 실패해도 UX는 성공 처리
+  // 1️⃣ 재인증 (필수)
+  const credential = firebase.auth.EmailAuthProvider.credential(
+    user.email,
+    rePassword
+  );
+  await user.reauthenticateWithCredential(credential);
+
+  // 2️⃣ Auth 계정 삭제
+  await user.delete();
+
+  // 3️⃣ DB 삭제 (실패해도 계정 삭제 성공 처리)
   try {
     deleteUserData(window.safeEmailFromApp);
   } catch (e) {
-    console.error("DB delete failed:", e);
+    console.error("DB 삭제 실패:", e);
   }
+
+  await firebase.auth().signOut();
 
   alert("계정이 정상적으로 삭제되었습니다.");
   window.location.href = "/";
 } catch (err) {
+  console.error(err);
+
   if (err.code === "auth/wrong-password") {
     alert("비밀번호가 틀렸습니다.");
+  } else if (err.code === "auth/requires-recent-login") {
+    alert("보안을 위해 다시 로그인 후 시도해 주세요.");
   } else {
     alert("계정 삭제 중 오류가 발생했습니다.");
   }
 }
+
   
 });
 
