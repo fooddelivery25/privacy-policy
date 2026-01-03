@@ -4,48 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>배달 정석 계정 삭제</title>
-  <!-- Firebase 라이브러리 -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .container {
-      background-color: #fff;
-      padding: 30px 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
-    }
-    h1 { font-size: 1.6rem; margin-bottom: 15px; color: #333; }
-    p { font-size: 1rem; color: #555; line-height: 1.5; margin-bottom: 30px; }
-    input { width: 100%; padding: 10px; margin-bottom: 15px; font-size: 1rem; }
-    #loginBtn, #deleteBtn {
-      background-color: #e53935;
-      color: white;
-      border: none;
-      padding: 12px 25px;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    #loginBtn:hover, #deleteBtn:hover { background-color: #d32f2f; }
-    #deleteBtn { display: none; } /* 로그인 전에는 숨김 */
+    body { font-family: 'Noto Sans KR', sans-serif; background:#f9f9f9; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+    .container { background:#fff; padding:30px 25px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); text-align:center; width:90%; max-width:400px; }
+    h1 { font-size:1.6rem; margin-bottom:15px; color:#333; }
+    p { font-size:1rem; color:#555; margin-bottom:30px; line-height:1.5; }
+    input { width:100%; padding:10px; margin-bottom:15px; font-size:1rem; }
+    button { background:#e53935; color:white; border:none; padding:12px 25px; font-size:1rem; border-radius:8px; cursor:pointer; transition:0.2s; width:100%; margin-bottom:10px; }
+    button:hover { background:#d32f2f; }
+    #deleteBtn { display:none; }
   </style>
 </head>
 <body>
@@ -74,7 +45,7 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.firestore();
+    const db = firebase.database();
 
     const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
@@ -85,18 +56,15 @@
     loginBtn.addEventListener("click", async () => {
       const email = emailInput.value.trim();
       const password = passwordInput.value.trim();
-      if (!email || !password) {
-        alert("이메일과 비밀번호를 입력하세요.");
-        return;
-      }
+      if (!email || !password) { alert("이메일과 비밀번호를 입력하세요."); return; }
       try {
         await auth.signInWithEmailAndPassword(email, password);
         alert("로그인 성공!");
-        loginBtn.style.display = "none";       // 로그인 폼 숨김
+        loginBtn.style.display = "none";
         emailInput.style.display = "none";
         passwordInput.style.display = "none";
-        deleteBtn.style.display = "block";      // 삭제 버튼 표시
-      } catch (err) {
+        deleteBtn.style.display = "block";
+      } catch(err) {
         console.error(err);
         alert("로그인 실패: " + err.message);
       }
@@ -105,28 +73,26 @@
     // 계정 삭제 처리
     deleteBtn.addEventListener("click", async () => {
       const user = auth.currentUser;
-      if (!user) {
-        alert("로그인 상태여야 합니다.");
-        return;
-      }
+      if (!user) { alert("로그인 상태여야 합니다."); return; }
       if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
 
       try {
-        // Firestore 데이터 삭제
-        const ordersSnapshot = await db.collection("orders").where("userId", "==", user.uid).get();
-        const batch = db.batch();
-        ordersSnapshot.forEach(doc => batch.delete(doc.ref));
-        batch.delete(db.collection("users").doc(user.uid));
-        await batch.commit();
+        // Realtime Database에서 사용자 데이터 삭제
+        await db.ref("users/" + user.uid).remove();       // users 컬렉션
+        await db.ref("orders/" + user.uid).remove();      // orders 컬렉션(UID 기준)
 
-        // Auth 계정 삭제
+        // Firebase Auth 계정 삭제
         await user.delete();
 
         alert("계정과 모든 데이터가 삭제되었습니다.");
-        window.location.href = "/";
-      } catch (err) {
+        window.location.href = "/"; // 홈페이지 이동
+      } catch(err) {
         console.error(err);
-        alert("삭제 오류 발생: " + err.code + " / " + err.message);
+        if (err.code === "auth/requires-recent-login") {
+          alert("최근 로그인 필요. 다시 로그인해주세요.");
+        } else {
+          alert("오류 발생: " + err.message);
+        }
       }
     });
   </script>
