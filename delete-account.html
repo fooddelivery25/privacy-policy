@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>배달 정석 계정 삭제</title>
+  <title>배달1 정석 계정 삭제</title>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -45,6 +45,7 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    console.log("dddd4 "+safeEmail);
 
     const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
@@ -53,6 +54,7 @@
 
     // 로그인 처리
     loginBtn.addEventListener("click", async () => {
+      alert("dddd4 "+safeEmail);
       const email = emailInput.value.trim();
       const password = passwordInput.value.trim();
       if (!email || !password) { alert("이메일과 비밀번호를 입력하세요."); return; }
