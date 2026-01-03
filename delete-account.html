@@ -82,39 +82,49 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // 🔹 계정 삭제 버튼 클릭
-    document.getElementById("deleteBtn").addEventListener("click", async () => {
-      const user = auth.currentUser;
-
-      if (!user) {
-        alert("로그인 상태여야 합니다.");
-        return;
-      }
-
-      if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
-
-      try {
-        // 🔹 Firestore 데이터 삭제
-        const ordersSnapshot = await db.collection("orders").where("userId", "==", user.uid).get();
-        const batch = db.batch();
-        ordersSnapshot.forEach(doc => batch.delete(doc.ref));
-        batch.delete(db.collection("users").doc(user.uid));
-        await batch.commit();
-
-        // 🔹 Firebase Auth 계정 삭제
-        await user.delete();
-
-        alert("계정과 모든 데이터가 삭제되었습니다.");
-        window.location.href = "/"; // 홈페이지 이동
-      } catch (err) {
-        console.error(err);
-        if (err.code === "auth/requires-recent-login") {
-          alert("보안상 최근 로그인 후에만 계정 삭제가 가능합니다. 다시 로그인해주세요.");
-        } else {
-          alert("오류가 발생했습니다. 다시 시도해주세요.");
-        }
-      }
+function signInWithCustomToken(idToken) {
+  auth.signInWithCustomToken(idToken)
+    .then(() => {
+      console.log("Custom Token 로그인 성공");
+    })
+    .catch(err => {
+      console.error("Custom Token 로그인 실패", err);
+      alert("로그인 오류가 발생했습니다.");
     });
+}
+
+// 삭제 버튼
+document.getElementById("deleteBtn").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("로그인 상태여야 합니다.");
+    return;
+  }
+
+  if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
+
+  try {
+    // Firestore 데이터 삭제
+    const ordersSnapshot = await db.collection("orders").where("userId", "==", user.uid).get();
+    const batch = db.batch();
+    ordersSnapshot.forEach(doc => batch.delete(doc.ref));
+    batch.delete(db.collection("users").doc(user.uid));
+    await batch.commit();
+
+    // Firebase Auth 계정 삭제
+    await user.delete();
+
+    alert("계정과 모든 데이터가 삭제되었습니다.");
+    window.location.href = "/";
+  } catch (err) {
+    console.error(err);
+    if (err.code === "auth/requires-recent-login") {
+      alert("최근 로그인 필요. 다시 로그인해주세요.");
+    } else {
+      alert("오류가 발생했습니다. 다시 시도해주세요.");
+    }
+  }
+});
   </script>
 </body>
 </html>
