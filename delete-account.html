@@ -150,13 +150,11 @@ try {
 
 
 function deleteUserData(safeEmail) {
-  alert("이메일 주소."+safeEmail);
   if (!safeEmail) {
     console.error("safeEmail이 없습니다.");
     return;
   }
   
-  alert("이메일 주소."+safeEmail);
   //const safeKey = safeEmail.replace(/\./g, ","); // Firebase key 안전 처리
   const userRef = db.ref("users/" + safeEmail);
   userRef.remove()
