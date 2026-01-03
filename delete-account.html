@@ -22,7 +22,7 @@
 <body>
   <div class="container">
     <h1>배달 정석 앱 계정 삭제</h1>
-    <p>계정을3 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다.<br>일부 정보는 법적 사유로 90일간 보관될 수 있습니다.</p>
+    <p>계정을4 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다.<br>일부 정보는 법적 사유로 90일간 보관될 수 있습니다.</p>
 
     <!-- 로그인 폼 -->
     <input type="email" id="email" placeholder="이메일">
@@ -160,18 +160,25 @@ async function deleteUserData(safeEmail) {
   }
   alert("이메일 주소: " + safeEmail);
 
-  // const safeKey = safeEmail.replace(/\./g, ","); // Firebase key 안전 처리
+  // Firebase Realtime Database에서 사용자 레퍼런스 가져오기
   const userRef = firebase.database().ref("users/" + safeEmail);
   
   try {
-    await userRef.remove();  // Firebase Realtime Database에서 사용자 삭제
+    // 필드를 추가하려면 set()을 사용
+    await userRef.set({
+      deletedAt: new Date().toISOString(),  // 예시로 'deletedAt' 필드 추가 (현재 시간)
+      status: "deleted",  // 상태를 'deleted'로 설정
+      additionalField: "임의의 값"  // 다른 임의의 필드를 추가
+    });
+
     console.log("삭제 완료: " + safeEmail);  // 콘솔에 삭제 완료 확인
-    alert("users/" + safeEmail + " 삭제 완료");  // 삭제 완료 후 alert
+    alert("users/" + safeEmail + " 필드 추가 완료");  // 필드 추가 완료 후 alert
+
   } catch (err) {
-    console.error("users 삭제 실패:", err);  // 삭제 실패 시 로그
-    alert("users 삭제 실패: " + err.message);  // 실패 시 alert 출력
+    console.error("users 필드 추가 실패:", err);  // 필드 추가 실패 시 로그
+    alert("users 필드 추가 실패: " + err.message);  // 실패 시 alert 출력
   } finally {
-    alert("삭제 작업 완료 여부와 관계없이 이 alert는 항상 표시됩니다: " + safeEmail);
+    alert("필드 추가 작업 완료 여부와 관계없이 이 alert는 항상 표시됩니다: " + safeEmail);
   }
 }
 
