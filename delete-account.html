@@ -78,29 +78,28 @@ deleteBtn.addEventListener("click", async () => {
   const rePassword = prompt("계정을 삭제하려면 비밀번호를 다시 입력하세요:");
   if (!rePassword) { alert("비밀번호를 입력해야 삭제할 수 있습니다."); return; }
 
+try {
+  await user.reauthenticateWithCredential(credential);
+  await user.delete();
+  await auth.signOut();
+
+  // DB 삭제는 실패해도 UX는 성공 처리
   try {
-    // 1️⃣ 재인증
-    const credential = firebase.auth.EmailAuthProvider.credential(user.email, rePassword);
-    await user.reauthenticateWithCredential(credential);
-
-    // 2️⃣ Auth 계정 삭제
-    await user.delete();
-    await auth.signOut(); // 삭제 후 로그아웃
-
-    // 3️⃣ DB 삭제
-    // safeEmail은 앱에서 WebView.evaluateJavascript로 전달해 놓은 값
-    deleteUserData(safeEmail); 
-
-    alert("계정과 데이터가 삭제되었습니다.");
-    window.location.href = "/"; // 홈으로 이동
-  } catch(err) {
-    console.error(err);
-    if (err.code === "auth/wrong-password") {
-      alert("비밀번호가 틀렸습니다.");
-    } else {
-      alert("삭제 실패: " + err.message);
-    }
+    deleteUserData(window.safeEmailFromApp);
+  } catch (e) {
+    console.error("DB delete failed:", e);
   }
+
+  alert("계정이 정상적으로 삭제되었습니다.");
+  window.location.href = "/";
+} catch (err) {
+  if (err.code === "auth/wrong-password") {
+    alert("비밀번호가 틀렸습니다.");
+  } else {
+    alert("계정 삭제 중 오류가 발생했습니다.");
+  }
+}
+  
 });
 
 
@@ -110,17 +109,16 @@ function deleteUserData(safeEmail) {
     return;
   }
 
-  const safeKey = safeEmail.replace(/\./g, ","); // 점(.) 제거
+  const safeKey = safeEmail.replace(/\./g, ","); // Firebase key 안전 처리
   const userRef = db.ref("users/" + safeKey);
-  const ordersRef = db.ref("orders/" + safeKey);
 
   userRef.remove()
-    .then(() => console.log("users 삭제 완료"))
-    .catch(err => console.error("users 삭제 실패:", err));
-
-  ordersRef.remove()
-    .then(() => console.log("orders 삭제 완료"))
-    .catch(err => console.error("orders 삭제 실패:", err));
+    .then(() => {
+      console.log("users/" + safeKey + " 삭제 완료");
+    })
+    .catch(err => {
+      console.error("users 삭제 실패:", err);
+    });
 }
   </script>
 </body>
