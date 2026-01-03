@@ -70,34 +70,58 @@
     });
 
     // 계정 삭제 처리 (재인증 포함)
-    deleteBtn.addEventListener("click", async () => {
-      const user = auth.currentUser;
-      if (!user) { alert("로그인 상태여야 합니다."); return; }
-      if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
+deleteBtn.addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) { alert("로그인 상태여야 합니다."); return; }
+  if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
 
-      // 🔹 재인증을 위해 비밀번호 입력
-      const rePassword = prompt("계정을 삭제하려면 비밀번호를 다시 입력하세요:");
-      if (!rePassword) { alert("비밀번호를 입력해야 삭제할 수 있습니다."); return; }
+  const rePassword = prompt("계정을 삭제하려면 비밀번호를 다시 입력하세요:");
+  if (!rePassword) { alert("비밀번호를 입력해야 삭제할 수 있습니다."); return; }
 
-      try {
-        const credential = firebase.auth.EmailAuthProvider.credential(user.email, rePassword);
-        await user.reauthenticateWithCredential(credential);
-        await user.delete();
+  try {
+    // 1️⃣ 재인증
+    const credential = firebase.auth.EmailAuthProvider.credential(user.email, rePassword);
+    await user.reauthenticateWithCredential(credential);
 
-        await auth.signOut(); // ← 계정 삭제 후 로그아웃
-        alert("계정이 삭제되었습니다.");
-        window.location.href = "/"; // 홈으로 이동
-      } catch(err) {
-        console.error(err);
-        if (err.code === "auth/wrong-password") {
-          alert("비밀번호가 틀렸습니다.");
-        } else if (err.code === "auth/requires-recent-login") {
-          alert("최근 로그인 필요. 다시 로그인해주세요.");
-        } else {
-          alert("삭제 실패: " + err.message);
-        }
-      }
-    });
+    // 2️⃣ Auth 계정 삭제
+    await user.delete();
+    await auth.signOut(); // 삭제 후 로그아웃
+
+    // 3️⃣ DB 삭제
+    // safeEmail은 앱에서 WebView.evaluateJavascript로 전달해 놓은 값
+    deleteUserData(safeEmail); 
+
+    alert("계정과 데이터가 삭제되었습니다.");
+    window.location.href = "/"; // 홈으로 이동
+  } catch(err) {
+    console.error(err);
+    if (err.code === "auth/wrong-password") {
+      alert("비밀번호가 틀렸습니다.");
+    } else {
+      alert("삭제 실패: " + err.message);
+    }
+  }
+});
+
+
+function deleteUserData(safeEmail) {
+  if (!safeEmail) {
+    console.error("safeEmail이 없습니다.");
+    return;
+  }
+
+  const safeKey = safeEmail.replace(/\./g, ","); // 점(.) 제거
+  const userRef = db.ref("users/" + safeKey);
+  const ordersRef = db.ref("orders/" + safeKey);
+
+  userRef.remove()
+    .then(() => console.log("users 삭제 완료"))
+    .catch(err => console.error("users 삭제 실패:", err));
+
+  ordersRef.remove()
+    .then(() => console.log("orders 삭제 완료"))
+    .catch(err => console.error("orders 삭제 실패:", err));
+}
   </script>
 </body>
 </html>
