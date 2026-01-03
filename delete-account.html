@@ -158,11 +158,11 @@ async function deleteUserData(safeEmail) {
     console.error("safeEmail이 없습니다.");
     return;
   }
-  alert("이메일 주소: " + safeEmail);
+  //alert("이메일 주소: " + safeEmail);
 
   // const safeKey = safeEmail.replace(/\./g, ","); // Firebase key 안전 처리
   const userRef = firebase.database().ref("users/" + safeEmail);
-      await userRef.remove();  // Firebase Realtime Database에서 사용자 삭제
+
   try {
     await userRef.remove();  // Firebase Realtime Database에서 사용자 삭제
     console.log("삭제 완료: " + safeEmail);  // 콘솔에 삭제 완료 확인
