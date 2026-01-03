@@ -103,7 +103,8 @@ deleteBtn.addEventListener("click", async () => {
 function deleteUserData() {
   const safeEmail = window.safeEmailFromApp;
   if (!safeEmail) {
-    console.error("safeEmail이 없습니다.");
+    console.error("safeEmail이 없습니다.dddd4 ");
+    Android.logFromJs("safeEmail이 없습니다.dddd4");
     return;
   }
 
