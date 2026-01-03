@@ -22,7 +22,7 @@
 <body>
   <div class="container">
     <h1>배달 정석 앱 계정 삭제</h1>
-    <p>계정을1 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다.<br>일부 정보는 법적 사유로 90일간 보관될 수 있습니다.</p>
+    <p>계정을2 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다.<br>일부 정보는 법적 사유로 90일간 보관될 수 있습니다.</p>
 
     <!-- 로그인 폼 -->
     <input type="email" id="email" placeholder="이메일">
@@ -153,26 +153,26 @@ try {
 });
 
 
-function deleteUserData(safeEmail) {
+async function deleteUserData(safeEmail) {
   if (!safeEmail) {
     console.error("safeEmail이 없습니다.");
     return;
   }
-  alert("이메일 주소1"+safeEmail);
+  alert("이메일 주소: " + safeEmail);
 
-  //const safeKey = safeEmail.replace(/\./g, ","); // Firebase key 안전 처리
+  // const safeKey = safeEmail.replace(/\./g, ","); // Firebase key 안전 처리
   const userRef = firebase.database().ref("users/" + safeEmail);
-  userRef.remove()
-    .then(() => {
-      console.log("삭제 완료: " + safeEmail);  // 콘솔에 삭제 완료 확인
-      alert("users/" + safeEmail + " 삭제 완료");  // 삭제 완료 후 alert
-    })
-    .catch(err => {
-      console.error("users 삭제 실패:", err);  // 삭제 실패 시 로그
-    })
-    .finally(() => {
-      alert("삭제 작업 완료 여부와 관계없이 이 alert는 항상 표시됩니다."+safeEmail);  // 삭제 성공/실패 여부 관계없이 표시되는 alert
-    });
+  
+  try {
+    await userRef.remove();  // Firebase Realtime Database에서 사용자 삭제
+    console.log("삭제 완료: " + safeEmail);  // 콘솔에 삭제 완료 확인
+    alert("users/" + safeEmail + " 삭제 완료");  // 삭제 완료 후 alert
+  } catch (err) {
+    console.error("users 삭제 실패:", err);  // 삭제 실패 시 로그
+    alert("users 삭제 실패: " + err.message);  // 실패 시 alert 출력
+  } finally {
+    alert("삭제 작업 완료 여부와 관계없이 이 alert는 항상 표시됩니다: " + safeEmail);
+  }
 }
 
 
