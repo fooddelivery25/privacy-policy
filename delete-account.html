@@ -84,6 +84,7 @@
         await user.reauthenticateWithCredential(credential);
         await user.delete();
 
+        await auth.signOut(); // ← 계정 삭제 후 로그아웃
         alert("계정이 삭제되었습니다.");
         window.location.href = "/"; // 홈으로 이동
       } catch(err) {
