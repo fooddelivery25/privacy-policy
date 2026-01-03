@@ -74,12 +74,17 @@ button:hover { background: #d32f2f; }
       alert("계정과 데이터가 삭제되었습니다.");
       window.location.href = "/"; // 원하는 페이지 이동
 
-    } catch(err) {
-      console.error(err);
-      if (window.Android && window.Android.logFromJs) {
-        window.Android.logFromJs("삭제 실패: " +user+" "+safeEmail+" "+ err.message);
-      }
-      alert("삭제 실패: " + err.message);
+} catch(err) {
+  console.error(err);
+
+  const userInfo = user ? (user.email || user.uid) : "user 없음";
+  const safeKey = safeEmail || "safeEmail 없음";
+
+  if (window.Android && window.Android.logFromJs) {
+    window.Android.logFromJs(`삭제 실패: ${userInfo} / ${safeKey} / ${err.message}`);
+  }
+
+  alert("삭제 실패: " + err.message);
     }
   });
 </script>
