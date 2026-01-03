@@ -58,6 +58,7 @@
     // 로그인 처리
     loginBtn.addEventListener("click", async () => {
           alert("dddd41 "+safeEmail);
+      return;
       const email = emailInput.value.trim();
       const password = passwordInput.value.trim();
       if (!email || !password) { alert("이메일과 비밀번호를 입력하세요."); return; }
