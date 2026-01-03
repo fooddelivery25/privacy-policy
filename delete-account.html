@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>배달 정석 계정 삭제</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <h1>배달 정석 앱 계정 삭제</h1>
+  <p>계정을 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다. 일부 정보는 법적 사유로 90일간 보관될 수 있습니다.</p>
+  <button id="deleteBtn">계정 삭제</button>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // 🔹 계정 삭제 버튼 클릭
+    document.getElementById("deleteBtn").addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("로그인 상태여야 합니다.");
+        return;
+      }
+
+      if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
+
+      try {
+        // 🔹 Firestore 사용자 데이터 삭제
+        const ordersSnapshot = await db.collection("orders").where("userId", "==", user.uid).get();
+        const batch = db.batch();
+        ordersSnapshot.forEach(doc => batch.delete(doc.ref));
+        batch.delete(db.collection("users").doc(user.uid));
+        await batch.commit();
+
+        // 🔹 Firebase Auth 계정 삭제
+        await user.delete();
+
+        alert("계정과 모든 데이터가 삭제되었습니다.");
+        window.location.href = "/"; // 홈페이지 이동
+      } catch (err) {
+        console.error(err);
+        if (err.code === "auth/requires-recent-login") {
+          alert("보안상 최근 로그인 후에만 계정 삭제가 가능합니다. 다시 로그인해주세요.");
+          // 🔹 다시 로그인 처리 (예: Firebase UI 또는 redirect)
+        } else {
+          alert("오류가 발생했습니다. 다시 시도해주세요.");
+        }
+      }
+    });
+  </script>
+</body>
+</html>
