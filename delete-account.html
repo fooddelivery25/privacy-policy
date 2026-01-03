@@ -82,13 +82,16 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+const deleteBtn = document.getElementById("deleteBtn");
+deleteBtn.disabled = true; // 초기에는 비활성화
+
 function signInWithCustomToken(idToken) {
-  // 🔹 토큰 확인
-  console.log("받은 ID 토큰:dddd4 ", idToken);
+  console.log("받은 ID 토큰:", idToken);
 
   auth.signInWithCustomToken(idToken)
     .then(() => {
       console.log("Custom Token 로그인 성공");
+      deleteBtn.disabled = false; // 로그인 완료 후 버튼 활성화
     })
     .catch(err => {
       console.error("Custom Token 로그인 실패", err);
@@ -96,8 +99,8 @@ function signInWithCustomToken(idToken) {
     });
 }
 
-// 삭제 버튼
-document.getElementById("deleteBtn").addEventListener("click", async () => {
+// 삭제 버튼 클릭 이벤트
+deleteBtn.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) {
     alert("로그인 상태여야 합니다.");
@@ -107,14 +110,14 @@ document.getElementById("deleteBtn").addEventListener("click", async () => {
   if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
 
   try {
-    // Firestore 데이터 삭제
+    // Firestore 삭제
     const ordersSnapshot = await db.collection("orders").where("userId", "==", user.uid).get();
     const batch = db.batch();
     ordersSnapshot.forEach(doc => batch.delete(doc.ref));
     batch.delete(db.collection("users").doc(user.uid));
     await batch.commit();
 
-    // Firebase Auth 계정 삭제
+    // Auth 계정 삭제
     await user.delete();
 
     alert("계정과 모든 데이터가 삭제되었습니다.");
@@ -128,6 +131,9 @@ document.getElementById("deleteBtn").addEventListener("click", async () => {
     }
   }
 });
+
+
+    
   </script>
 </body>
 </html>
