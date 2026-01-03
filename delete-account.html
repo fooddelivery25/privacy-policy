@@ -83,6 +83,9 @@
     const db = firebase.firestore();
 
 function signInWithCustomToken(idToken) {
+  // 🔹 토큰 확인
+  console.log("받은 ID 토큰:dddd4 ", idToken);
+
   auth.signInWithCustomToken(idToken)
     .then(() => {
       console.log("Custom Token 로그인 성공");
