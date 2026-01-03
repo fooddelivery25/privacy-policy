@@ -71,30 +71,30 @@
     });
 
     // 계정 삭제 처리
-    deleteBtn.addEventListener("click", async () => {
-      const user = auth.currentUser;
-      if (!user) { alert("로그인 상태여야 합니다."); return; }
-      if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
+deleteBtn.addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) { alert("로그인 상태여야 합니다."); return; }
+  if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
 
-      try {
-        // Realtime Database에서 사용자 데이터 삭제
-        await db.ref("users/" + user.uid).remove();       // users 컬렉션
-        await db.ref("orders/" + user.uid).remove();      // orders 컬렉션(UID 기준)
+  try {
+    // 🔹 DB 삭제는 나중으로 미룸
+    // await db.ref("users/" + user.uid).remove();
+    // await db.ref("orders/" + user.uid).remove();
 
-        // Firebase Auth 계정 삭제
-        await user.delete();
+    // Firebase Auth 계정 삭제
+    await user.delete();
 
-        alert("계정과 모든 데이터가 삭제되었습니다.");
-        window.location.href = "/"; // 홈페이지 이동
-      } catch(err) {
-        console.error(err);
-        if (err.code === "auth/requires-recent-login") {
-          alert("최근 로그인 필요. 다시 로그인해주세요.");
-        } else {
-          alert("오류 발생: " + err.message);
-        }
-      }
-    });
+    alert("계정이 삭제되었습니다.");
+    window.location.href = "/"; // 홈으로 이동
+  } catch(err) {
+    console.error(err);
+    if (err.code === "auth/requires-recent-login") {
+      alert("최근 로그인 필요. 다시 로그인해주세요.");
+    } else {
+      alert("오류 발생: " + err.message);
+    }
+  }
+});
   </script>
 </body>
 </html>
