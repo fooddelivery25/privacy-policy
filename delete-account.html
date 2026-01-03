@@ -117,10 +117,7 @@ try {
   
   
   // 1️⃣ 재인증 (필수)
-  const credential = firebase.auth.EmailAuthProvider.credential(
-    user.email,
-    rePassword
-  );
+  const credential = firebase.auth.EmailAuthProvider.credential(user.email, rePassword);
   await user.reauthenticateWithCredential(credential);
 
   // 3️⃣ DB 삭제 (실패해도 계정 삭제 성공 처리)
@@ -131,8 +128,7 @@ try {
   }
   
   // 2️⃣ Auth 계정 삭제
-  //await user.delete();
-
+  await user.delete();
   await firebase.auth().signOut();
 
   alert("계정이 정상적으로 삭제되었습니다.");
