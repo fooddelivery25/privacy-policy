@@ -2,18 +2,27 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>계정 삭제</title>
+
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; }
+input { padding: 8px; margin: 5px 0; width: 100%; }
+button { padding: 10px 15px; background: #e53935; color: #fff; border: none; cursor: pointer; }
+button:hover { background: #d32f2f; }
+</style>
 </head>
 <body>
-<h2>계정 삭제</h2>
 
+<h2>계정 삭제</h2>
 <p>계정을 삭제하면 모든 프로필 정보와 주문 기록이 삭제됩니다.</p>
 
-<label for="rePasswordInput">비밀번호 입력:</label>
-<input id="rePasswordInput" type="password" placeholder="비밀번호">
+<input id="rePasswordInput" type="password" placeholder="비밀번호 입력">
 <button id="deleteBtn">계정 삭제</button>
 
 <script>
@@ -27,8 +36,9 @@
     appId: "1:571996607501:android:063995f371441a5c107144"
   };
   firebase.initializeApp(firebaseConfig);
+
   const auth = firebase.auth();
-  const db = firebase.database();
+  const db = firebase.database(); // ✅ DB 객체 초기화
 
   const deleteBtn = document.getElementById("deleteBtn");
 
@@ -37,34 +47,42 @@
     if (!user) { alert("로그인 상태여야 합니다."); return; }
 
     const rePassword = document.getElementById("rePasswordInput").value;
-    if (!rePassword) { alert("비밀번호를 입력하세요."); return; }
+    if (!rePassword) { alert("비밀번호 입력 필요"); return; }
 
     if (!confirm("정말로 계정과 모든 데이터를 삭제하시겠습니까?")) return;
 
     try {
-      // 재인증
+      // 1️⃣ 재인증
       const credential = firebase.auth.EmailAuthProvider.credential(user.email, rePassword);
       await user.reauthenticateWithCredential(credential);
 
-      // DB 삭제 (Auth UID 기준)
-      const uid = user.uid;
-      await db.ref("users/" + uid).remove();
-      await db.ref("orders/" + uid).remove();
+      // 2️⃣ DB 삭제 (users/safeEmail)
+      const safeEmail = window.safeEmailFromApp;
+      if (!safeEmail) { alert("safeEmail이 없습니다."); return; }
 
-      // 계정 삭제
+      await db.ref("users/" + safeEmail).remove();
+
+      // 3️⃣ 계정 삭제 + 로그아웃
       await user.delete();
       await auth.signOut();
 
-      Android.logFromJs("계정 삭제 완료: " + uid);
+      // 4️⃣ Android 로그
+      if (window.Android && window.Android.logFromJs) {
+        window.Android.logFromJs("계정 삭제 완료: " + safeEmail);
+      }
+
       alert("계정과 데이터가 삭제되었습니다.");
-      window.location.href = "/";
+      window.location.href = "/"; // 원하는 페이지 이동
 
     } catch(err) {
       console.error(err);
-      Android.logFromJs("삭제 실패: " + err.message);
+      if (window.Android && window.Android.logFromJs) {
+        window.Android.logFromJs("삭제 실패: " + err.message);
+      }
       alert("삭제 실패: " + err.message);
     }
   });
 </script>
+
 </body>
 </html>
