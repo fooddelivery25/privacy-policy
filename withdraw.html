@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>회원 탈퇴 - All In One Delivery</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f9f9f9; }
+        .container { width: 400px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background: #ff4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #cc0000; }
+        button:disabled { background: #aaaaaa; cursor: not-allowed; }
+        .warning { color: #cc0000; font-size: 0.9em; line-height: 1.5; padding: 12px; background: #fff0f0; border-radius: 4px; margin-bottom: 15px; border-left: 4px solid #ff4444; }
+        .status { font-size: 0.85em; color: #666; text-align: center; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>회원 탈퇴 신청</h2>
+
+    <div class="warning">
+        ⚠️ <b>정산 보호 및 탈퇴 제한 안내</b><br>
+        - 탈퇴 시 모든 회원 정보, 상점 정보 및 상품 데이터는 즉시 삭제되며 복구할 수 없습니다.<br>
+        - <b>미결제 대금 및 미정산 분쟁 방지</b>를 위해, 최근 <b>4주(28일) 이내</b>에 주문 접수(상점), 배달 수행(라이더), 또는 주문 이용(고객) 내역이 존재하면 탈퇴가 제한됩니다.
+    </div>
+
+    <!-- action은 자바스크립트가 로드되면 Gist 주소 기반으로 바뀝니다 -->
+    <form id="withdrawForm" action="" method="POST">
+        <label>이메일 계정</label>
+        <input type="email" name="user_id" required placeholder="example@gmail.com">
+
+        <label>비밀번호 확인</label>
+        <input type="password" name="password" required placeholder="비밀번호를 입력하세요">
+
+        <button type="submit" id="submitBtn" disabled>서버 연결 중...</button>
+    </form>
+    
+    <div id="statusMsg" class="status">보안 서버 주소를 불러오는 중입니다...</div>
+</div>
+
+<script>
+    // 1. 사장님의 Gist Raw 텍스트 주소
+    const gistUrl = "https://gist.githubusercontent.com/fooddelivery25/36d3154012fd8f15d8d7754b003f88a3/raw/current_url.txt";
+
+    // 2. 페이지가 열리자마자 Gist에서 최신 Cloudflare 주소를 비동기로 가져옵니다.
+    fetch(gistUrl)
+        .then(response => {
+            if (!response.ok) throw new Error("네트워크 응답에 문제가 있습니다.");
+            return response.text();
+        })
+        .then(baseUrl => {
+            // 텍스트 파일 안의 불필요한 공백이나 줄바꿈 제거
+            const cleanBaseUrl = baseUrl.trim(); 
+            
+            // 3. 폼(Form)의 action 경로를 최신 서버 주소 + PHP 가동 경로로 동적 매핑
+            const form = document.getElementById('withdrawForm');
+            form.action = cleanBaseUrl + "/deliverydb/signup/process_withdraw.php";
+            
+            // 4. 연동이 완료되면 버튼을 활성화하고 문구를 변경합니다.
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = false;
+            submitBtn.innerText = "탈퇴하기";
+            
+            document.getElementById('statusMsg').innerText = "보안 서버와 성공적으로 연결되었습니다.";
+            
+            // 5. 탈퇴 확인 컨펌 모달 이벤트 바인딩
+            form.onsubmit = function() {
+                return confirm('정말로 탈퇴하시겠습니까?\n최근 4주간 배달/주문 거래가 있었다면 탈퇴가 거절됩니다.');
+            };
+        })
+        .catch(error => {
+            console.error("주소 로드 실패:", error);
+            document.getElementById('statusMsg').innerText = "서버 연결에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+            document.getElementById('statusMsg').style.color = "#ff4444";
+        });
+</script>
+</body>
+</html>
